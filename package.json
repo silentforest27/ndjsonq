@@ -1,0 +1,17 @@
+{
+  "name": "ndjsonq",
+  "version": "1.0.0",
+  "description": "A dependency-free Node.js CLI for filtering, projecting, and formatting NDJSON records.",
+  "type": "commonjs",
+  "bin": {
+    "ndjsonq": "bin/ndjsonq.js"
+  },
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}
