@@ -108,8 +108,17 @@ function parseArgs(argv) {
     opts.file = positionals[0];
   } else if (!opts.where) {
     if (positionals.length >= 2) {
-      opts.where = positionals[0];
-      opts.file = positionals[1];
+      const [first, second] = positionals;
+      if (fs.existsSync(first) && !fs.existsSync(second)) {
+        opts.file = first;
+        opts.where = second;
+      } else if (!fs.existsSync(first) && fs.existsSync(second)) {
+        opts.file = second;
+        opts.where = first;
+      } else {
+        opts.file = first;
+        opts.where = second;
+      }
     } else if (positionals.length === 1) {
       if (fs.existsSync(positionals[0])) {
         opts.file = positionals[0];
@@ -172,4 +181,82 @@ function printHelp() {
       `  Paths: user.name, items[0]\n` +
       `  Operators: == != < <= > >= && || ! + - * / %\n` +
       `  Membership: value in array, substring in string, key in object\n` +
-      `  Literals: numbers, \
+      `  Literals: numbers, strings, booleans, null, and arrays\n` +
+      `  Functions: length, lower, upper, trim, exists, type, number, string,\n` +
+      `             abs, min, max, keys, contains, includes\n`
+  );
+}
+
+function printVersion() {
+  const pkg = require('../package.json');
+  process.stdout.write(`${pkg.version}\n`);
+}
+
+async function run(argv) {
+  const opts = parseArgs(argv);
+
+  if (opts.help) {
+    printHelp();
+    return 0;
+  }
+  if (opts.version) {
+    printVersion();
+    return 0;
+  }
+
+  const whereNode = opts.where ? parseExpression(opts.where) : null;
+  const selectFields = opts.select
+    ? opts.select.split(',').map((field) => field.trim()).filter(Boolean)
+    : null;
+
+  const projectRecord = (record) =>
+    selectFields ? project(record, selectFields) : record;
+
+  if (opts.count) {
+    const input = opts.file ? fs.createReadStream(opts.file) : process.stdin;
+    const rl = readline.createInterface({ input, crlfDelay: Infinity });
+    let count = 0;
+
+    for await (const line of rl) {
+      if (line.trim() === '') continue;
+      let record;
+      try {
+        record = JSON.parse(line);
+      } catch (error) {
+        throw new Error(`invalid JSON: ${error.message}`);
+      }
+      if (whereNode && !truthy(evaluate(whereNode, record))) continue;
+      count += 1;
+    }
+
+    process.stdout.write(`${count}\n`);
+    return 0;
+  }
+
+  const input = opts.file ? fs.createReadStream(opts.file) : process.stdin;
+  const rl = readline.createInterface({ input, crlfDelay: Infinity });
+  let matching = 0;
+  let emitted = 0;
+
+  for await (const line of rl) {
+    if (line.trim() === '') continue;
+    let record;
+    try {
+      record = JSON.parse(line);
+    } catch (error) {
+      throw new Error(`invalid JSON: ${error.message}`);
+    }
+    if (whereNode && !truthy(evaluate(whereNode, record))) continue;
+
+    matching += 1;
+    if (matching <= opts.offset) continue;
+    if (emitted >= opts.limit) continue;
+
+    process.stdout.write(`${JSON.stringify(projectRecord(record))}\n`);
+    emitted += 1;
+  }
+
+  return 0;
+}
+
+module.exports = { run };

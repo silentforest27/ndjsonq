@@ -55,6 +55,23 @@ test('reads a file and limits output', () => {
   fs.rmSync(directory, { recursive: true, force: true });
 });
 
+test('reads a file with a trailing expression', () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ndjsonq-'));
+  const file = path.join(directory, 'data.ndjson');
+  fs.writeFileSync(
+    file,
+    [
+      JSON.stringify({ id: 1 }),
+      JSON.stringify({ id: 2 }),
+      JSON.stringify({ id: 3 })
+    ].join('\n') + '\n'
+  );
+  const result = runCli([file, 'id > 1']);
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, '{"id":2}\n{"id":3}\n');
+  fs.rmSync(directory, { recursive: true, force: true });
+});
+
 test('reports invalid JSON and exits nonzero', () => {
   const result = runCli([], '{not json}\n');
   assert.notEqual(result.status, 0);
