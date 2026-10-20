@@ -11,15 +11,67 @@ function truthy(value) {
   );
 }
 
+function splitPath(path) {
+  const segments = [];
+  const input = String(path);
+  let i = 0;
+  while (i < input.length) {
+    if (input[i] === '.') {
+      i += 1;
+      continue;
+    }
+
+    if (input[i] === '[') {
+      const close = input.indexOf(']', i);
+      if (close === -1) {
+        segments.push(input.slice(i));
+        break;
+      }
+      let content = input.slice(i + 1, close).trim();
+      if (
+        (content.startsWith('"') &&
+          content.endsWith('"') &&
+          content.length >= 2) ||
+        (content.startsWith("'") &&
+          content.endsWith("'") &&
+          content.length >= 2)
+      ) {
+        content = content.slice(1, -1);
+      }
+      if (content !== '') {
+        segments.push(content);
+      }
+      i = close + 1;
+      continue;
+    }
+
+    const nextDot = input.indexOf('.', i);
+    const nextBracket = input.indexOf('[', i);
+    let end = input.length;
+    if (nextDot !== -1) end = Math.min(end, nextDot);
+    if (nextBracket !== -1) end = Math.min(end, nextBracket);
+    const segment = input.slice(i, end);
+    if (segment !== '') {
+      segments.push(segment);
+    }
+    i = end;
+  }
+  return segments;
+}
+
 function getPath(record, path) {
   if (record == null) return undefined;
   let current = record;
-  for (const part of String(path).split('.')) {
+  for (const part of splitPath(path)) {
     if (current == null) return undefined;
     if (Array.isArray(current) && /^\d+$/.test(part)) {
       current = current[Number(part)];
-    } else if (Object.prototype.hasOwnProperty.call(current, part)) {
-      current = current[part];
+    } else if (typeof current === 'object') {
+      if (Object.prototype.hasOwnProperty.call(current, part)) {
+        current = current[part];
+      } else {
+        return undefined;
+      }
     } else {
       return undefined;
     }
@@ -28,7 +80,8 @@ function getPath(record, path) {
 }
 
 function setPath(record, path, value) {
-  const parts = String(path).split('.');
+  const parts = splitPath(path);
+  if (parts.length === 0) return;
   let current = record;
   for (let i = 0; i < parts.length - 1; i += 1) {
     const part = parts[i];
@@ -242,5 +295,6 @@ module.exports = {
   getPath,
   setPath,
   project,
-  deepEqual
+  deepEqual,
+  splitPath
 };
