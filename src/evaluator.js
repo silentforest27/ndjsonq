@@ -11,6 +11,35 @@ function truthy(value) {
   );
 }
 
+function unescapeBracketValue(value) {
+  const inner = value.slice(1, -1);
+  const escapes = {
+    n: '\n',
+    t: '\t',
+    r: '\r',
+    b: '\b',
+    f: '\f',
+    v: '\v',
+    '"': '"',
+    "'": "'",
+    '\\': '\\'
+  };
+  let result = '';
+  for (let i = 0; i < inner.length; i += 1) {
+    const char = inner[i];
+    if (char === '\\' && i + 1 < inner.length) {
+      const escaped = inner[i + 1];
+      result += Object.prototype.hasOwnProperty.call(escapes, escaped)
+        ? escapes[escaped]
+        : escaped;
+      i += 1;
+    } else {
+      result += char;
+    }
+  }
+  return result;
+}
+
 function splitPath(path) {
   const segments = [];
   const input = String(path);
@@ -81,7 +110,7 @@ function splitPath(path) {
         ((value.startsWith('"') && value.endsWith('"')) ||
           (value.startsWith("'") && value.endsWith("'")))
       ) {
-        value = value.slice(1, -1);
+        value = unescapeBracketValue(value);
       }
       if (value !== '') {
         segments.push(value);
@@ -144,7 +173,10 @@ function setPath(record, path, value) {
 function project(record, fields) {
   const output = {};
   for (const field of fields) {
-    setPath(output, field, getPath(record, field));
+    const value = getPath(record, field);
+    if (value !== undefined) {
+      setPath(output, field, value);
+    }
   }
   return output;
 }
