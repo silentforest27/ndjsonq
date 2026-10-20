@@ -192,6 +192,12 @@ function printVersion() {
   process.stdout.write(`${pkg.version}\n`);
 }
 
+function formatRecord(value, format) {
+  return format === 'pretty'
+    ? JSON.stringify(value, null, 2)
+    : JSON.stringify(value);
+}
+
 async function run(argv) {
   const opts = parseArgs(argv);
 
@@ -250,9 +256,9 @@ async function run(argv) {
 
     matching += 1;
     if (matching <= opts.offset) continue;
-    if (emitted >= opts.limit) continue;
+    if (emitted >= opts.limit) break;
 
-    process.stdout.write(`${JSON.stringify(projectRecord(record))}\n`);
+    process.stdout.write(`${formatRecord(projectRecord(record), opts.format)}\n`);
     emitted += 1;
   }
 

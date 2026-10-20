@@ -77,3 +77,21 @@ test('reports invalid JSON and exits nonzero', () => {
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /invalid JSON/);
 });
+
+test('pretty-prints records', () => {
+  const input = JSON.stringify({ id: 2, age: 20 });
+  const result = runCli(['--format', 'pretty'], input);
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, '{\n  "id": 2,\n  "age": 20\n}\n');
+});
+
+test('skips matching records with offset', () => {
+  const input = [
+    JSON.stringify({ id: 1 }),
+    JSON.stringify({ id: 2 }),
+    JSON.stringify({ id: 3 })
+  ].join('\n');
+  const result = runCli(['--offset', '1'], input);
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, '{"id":2}\n{"id":3}\n');
+});
