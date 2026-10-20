@@ -14,48 +14,91 @@ function truthy(value) {
 function splitPath(path) {
   const segments = [];
   const input = String(path);
+  const length = input.length;
   let i = 0;
-  while (i < input.length) {
+
+  while (i < length) {
     if (input[i] === '.') {
       i += 1;
       continue;
     }
 
     if (input[i] === '[') {
-      const close = input.indexOf(']', i);
-      if (close === -1) {
-        segments.push(input.slice(i));
-        break;
+      i += 1;
+      let depth = 1;
+      let quote = null;
+      let content = '';
+
+      while (i < length && depth > 0) {
+        const char = input[i];
+
+        if (quote) {
+          content += char;
+          if (char === '\\' && i + 1 < length) {
+            content += input[i + 1];
+            i += 2;
+            continue;
+          }
+          if (char === quote) {
+            quote = null;
+          }
+          i += 1;
+          continue;
+        }
+
+        if (char === '"' || char === "'") {
+          quote = char;
+          content += char;
+          i += 1;
+          continue;
+        }
+
+        if (char === '[') {
+          depth += 1;
+          content += char;
+          i += 1;
+          continue;
+        }
+
+        if (char === ']') {
+          depth -= 1;
+          if (depth === 0) {
+            i += 1;
+            break;
+          }
+          content += char;
+          i += 1;
+          continue;
+        }
+
+        content += char;
+        i += 1;
       }
-      let content = input.slice(i + 1, close).trim();
+
+      let value = content.trim();
       if (
-        (content.startsWith('"') &&
-          content.endsWith('"') &&
-          content.length >= 2) ||
-        (content.startsWith("'") &&
-          content.endsWith("'") &&
-          content.length >= 2)
+        value.length >= 2 &&
+        ((value.startsWith('"') && value.endsWith('"')) ||
+          (value.startsWith("'") && value.endsWith("'")))
       ) {
-        content = content.slice(1, -1);
+        value = value.slice(1, -1);
       }
-      if (content !== '') {
-        segments.push(content);
+      if (value !== '') {
+        segments.push(value);
       }
-      i = close + 1;
       continue;
     }
 
-    const nextDot = input.indexOf('.', i);
-    const nextBracket = input.indexOf('[', i);
-    let end = input.length;
-    if (nextDot !== -1) end = Math.min(end, nextDot);
-    if (nextBracket !== -1) end = Math.min(end, nextBracket);
-    const segment = input.slice(i, end);
+    const start = i;
+    while (i < length && input[i] !== '.' && input[i] !== '[') {
+      i += 1;
+    }
+    const segment = input.slice(start, i);
     if (segment !== '') {
       segments.push(segment);
     }
-    i = end;
   }
+
   return segments;
 }
 
@@ -81,20 +124,21 @@ function getPath(record, path) {
 
 function setPath(record, path, value) {
   const parts = splitPath(path);
-  if (parts.length === 0) return;
+  if (parts.length === 0 || record == null || typeof record !== 'object') return;
   let current = record;
   for (let i = 0; i < parts.length - 1; i += 1) {
     const part = parts[i];
-    if (
-      typeof current[part] !== 'object' ||
-      current[part] === null ||
-      Array.isArray(current[part])
-    ) {
-      current[part] = {};
+    const next = parts[i + 1];
+    if (current[part] == null || typeof current[part] !== 'object') {
+      current[part] = /^\d+$/.test(next) ? [] : {};
     }
     current = current[part];
+    if (current == null) return;
   }
-  current[parts[parts.length - 1]] = value;
+  const last = parts[parts.length - 1];
+  if (current != null && typeof current === 'object') {
+    current[last] = value;
+  }
 }
 
 function project(record, fields) {
