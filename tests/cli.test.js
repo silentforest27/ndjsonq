@@ -72,6 +72,23 @@ test('reads a file with a trailing expression', () => {
   fs.rmSync(directory, { recursive: true, force: true });
 });
 
+test('reads a file when the expression comes first', () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ndjsonq-'));
+  const file = path.join(directory, 'data.ndjson');
+  fs.writeFileSync(
+    file,
+    [
+      JSON.stringify({ id: 1 }),
+      JSON.stringify({ id: 2 }),
+      JSON.stringify({ id: 3 })
+    ].join('\n') + '\n'
+  );
+  const result = runCli(['id > 1', file]);
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, '{"id":2}\n{"id":3}\n');
+  fs.rmSync(directory, { recursive: true, force: true });
+});
+
 test('reports invalid JSON and exits nonzero', () => {
   const result = runCli([], '{not json}\n');
   assert.notEqual(result.status, 0);
@@ -94,4 +111,16 @@ test('skips matching records with offset', () => {
   const result = runCli(['--offset', '1'], input);
   assert.equal(result.status, 0);
   assert.equal(result.stdout, '{"id":2}\n{"id":3}\n');
+});
+
+test('rejects non-integer limits', () => {
+  const result = runCli(['--limit', '1.5'], '{"id":1}\n');
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Invalid --limit value/);
+});
+
+test('rejects too many positional arguments', () => {
+  const result = runCli(['first', 'second', 'third'], '{"id":1}\n');
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Too many positional arguments/);
 });

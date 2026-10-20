@@ -104,29 +104,34 @@ function parseArgs(argv) {
     }
   }
 
-  if (opts.where && positionals.length > 0) {
-    opts.file = positionals[0];
-  } else if (!opts.where) {
-    if (positionals.length >= 2) {
-      const [first, second] = positionals;
-      if (fs.existsSync(first) && !fs.existsSync(second)) {
-        opts.file = first;
-        opts.where = second;
-      } else if (!fs.existsSync(first) && fs.existsSync(second)) {
-        opts.file = second;
-        opts.where = first;
-      } else {
-        opts.file = first;
-        opts.where = second;
-      }
-    } else if (positionals.length === 1) {
-      if (fs.existsSync(positionals[0])) {
-        opts.file = positionals[0];
-      } else {
-        opts.where = positionals[0];
-      }
+  const hasWhere = opts.where !== undefined;
+  if (hasWhere) {
+    if (positionals.length > 1) {
+      throw new Error('Too many positional arguments');
+    }
+    if (positionals.length === 1) {
+      opts.file = positionals[0];
+    }
+  } else if (positionals.length >= 2) {
+    const [first, second] = positionals;
+    if (fs.existsSync(first) && !fs.existsSync(second)) {
+      opts.file = first;
+      opts.where = second;
+    } else if (!fs.existsSync(first) && fs.existsSync(second)) {
+      opts.file = second;
+      opts.where = first;
+    } else {
+      opts.file = first;
+      opts.where = second;
+    }
+  } else if (positionals.length === 1) {
+    if (fs.existsSync(positionals[0])) {
+      opts.file = positionals[0];
+    } else {
+      opts.where = positionals[0];
     }
   }
+
   if (positionals.length > 2) {
     throw new Error('Too many positional arguments');
   }
@@ -135,7 +140,7 @@ function parseArgs(argv) {
     opts.limit = Infinity;
   } else {
     const value = Number(opts.limit);
-    if (!Number.isFinite(value) || value < 0) {
+    if (!Number.isFinite(value) || !Number.isInteger(value) || value < 0) {
       throw new Error('Invalid --limit value');
     }
     opts.limit = value;
@@ -145,7 +150,7 @@ function parseArgs(argv) {
     opts.offset = 0;
   } else {
     const value = Number(opts.offset);
-    if (!Number.isFinite(value) || value < 0) {
+    if (!Number.isFinite(value) || !Number.isInteger(value) || value < 0) {
       throw new Error('Invalid --offset value');
     }
     opts.offset = value;
@@ -208,6 +213,10 @@ async function run(argv) {
   if (opts.version) {
     printVersion();
     return 0;
+  }
+
+  if (opts.file && !fs.existsSync(opts.file)) {
+    throw new Error(`File not found: ${opts.file}`);
   }
 
   const whereNode = opts.where ? parseExpression(opts.where) : null;
