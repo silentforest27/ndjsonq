@@ -286,6 +286,14 @@ function formatRecord(value, format) {
     : JSON.stringify(value);
 }
 
+function parseJsonLine(line, lineNumber) {
+  try {
+    return JSON.parse(line);
+  } catch (error) {
+    throw new Error(`invalid JSON on line ${lineNumber}: ${error.message}`);
+  }
+}
+
 async function run(argv) {
   const opts = parseArgs(argv);
 
@@ -317,17 +325,14 @@ async function run(argv) {
     const rl = readline.createInterface({ input, crlfDelay: Infinity });
     let count = 0;
     let firstLine = true;
+    let lineNumber = 0;
 
     for await (const line of rl) {
+      lineNumber += 1;
       const currentLine = firstLine ? line.replace(/^\ufeff/, '') : line;
       firstLine = false;
       if (currentLine.trim() === '') continue;
-      let record;
-      try {
-        record = JSON.parse(currentLine);
-      } catch (error) {
-        throw new Error(`invalid JSON: ${error.message}`);
-      }
+      const record = parseJsonLine(currentLine, lineNumber);
       if (whereNode && !truthy(evaluate(whereNode, record))) continue;
       count += 1;
     }
@@ -343,17 +348,14 @@ async function run(argv) {
   let matching = 0;
   let emitted = 0;
   let firstLine = true;
+  let lineNumber = 0;
 
   for await (const line of rl) {
+    lineNumber += 1;
     const currentLine = firstLine ? line.replace(/^\ufeff/, '') : line;
     firstLine = false;
     if (currentLine.trim() === '') continue;
-    let record;
-    try {
-      record = JSON.parse(currentLine);
-    } catch (error) {
-      throw new Error(`invalid JSON: ${error.message}`);
-    }
+    const record = parseJsonLine(currentLine, lineNumber);
     if (whereNode && !truthy(evaluate(whereNode, record))) continue;
 
     matching += 1;

@@ -100,7 +100,7 @@ function tokenize(input) {
         i < length &&
         input[i] === '.' &&
         i + 1 < length &&
-        /[A-Za-z_]/.test(input[i + 1])
+        /[A-Za-z0-9_]/.test(input[i + 1])
       ) {
         i += 1;
         const segmentStart = i;

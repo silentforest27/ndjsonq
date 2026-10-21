@@ -146,6 +146,9 @@ function getPath(record, path) {
     if (current == null) return undefined;
     if (Array.isArray(current) && /^\d+$/.test(part)) {
       current = current[Number(part)];
+    } else if (typeof current === 'string' && /^\d+$/.test(part)) {
+      const index = Number(part);
+      current = index >= 0 && index < current.length ? current[index] : undefined;
     } else if (typeof current === 'object') {
       if (Object.prototype.hasOwnProperty.call(current, part)) {
         current = current[part];
@@ -162,11 +165,13 @@ function getPath(record, path) {
 function setPath(record, path, value) {
   const parts = splitPath(path);
   if (parts.length === 0 || record == null || typeof record !== 'object') return;
+  if (parts.some((part) => part === '__proto__')) return;
   let current = record;
   for (let i = 0; i < parts.length - 1; i += 1) {
     const part = parts[i];
     const next = parts[i + 1];
-    if (current[part] == null || typeof current[part] !== 'object') {
+    const hasOwn = Object.prototype.hasOwnProperty.call(current, part);
+    if (!hasOwn || current[part] == null || typeof current[part] !== 'object') {
       current[part] = /^\d+$/.test(next) ? [] : {};
     }
     current = current[part];
