@@ -125,7 +125,7 @@ function parseArgs(argv) {
       opts.where = second;
     }
   } else if (positionals.length === 1) {
-    if (fs.existsSync(positionals[0])) {
+    if (fs.existsSync(positionals[0]) || positionals[0] === '-') {
       opts.file = positionals[0];
     } else {
       opts.where = positionals[0];
@@ -178,6 +178,7 @@ function printHelp() {
       `  -c, --count            Print only the number of matching records.\n` +
       `  -h, --help             Show this help.\n` +
       `  -v, --version          Show version.\n\n` +
+      `Use - as the file name to read from standard input.\n\n` +
       `Expression examples:\n` +
       `  ndjsonq data.ndjson 'age >= 18 && status == "active"'\n` +
       `  ndjsonq --select id,name --limit 10 data.ndjson\n` +
@@ -215,7 +216,7 @@ async function run(argv) {
     return 0;
   }
 
-  if (opts.file && !fs.existsSync(opts.file)) {
+  if (opts.file && opts.file !== '-' && !fs.existsSync(opts.file)) {
     throw new Error(`File not found: ${opts.file}`);
   }
 
@@ -228,7 +229,9 @@ async function run(argv) {
     selectFields ? project(record, selectFields) : record;
 
   if (opts.count) {
-    const input = opts.file ? fs.createReadStream(opts.file) : process.stdin;
+    const input = opts.file && opts.file !== '-'
+      ? fs.createReadStream(opts.file)
+      : process.stdin;
     const rl = readline.createInterface({ input, crlfDelay: Infinity });
     let count = 0;
 
@@ -248,7 +251,9 @@ async function run(argv) {
     return 0;
   }
 
-  const input = opts.file ? fs.createReadStream(opts.file) : process.stdin;
+  const input = opts.file && opts.file !== '-'
+    ? fs.createReadStream(opts.file)
+    : process.stdin;
   const rl = readline.createInterface({ input, crlfDelay: Infinity });
   let matching = 0;
   let emitted = 0;

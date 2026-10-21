@@ -122,7 +122,7 @@ function splitPath(path) {
     while (i < length && input[i] !== '.' && input[i] !== '[') {
       i += 1;
     }
-    const segment = input.slice(start, i);
+    const segment = input.slice(start, i).trim();
     if (segment !== '') {
       segments.push(segment);
     }

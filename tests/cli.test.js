@@ -124,3 +124,10 @@ test('rejects too many positional arguments', () => {
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /Too many positional arguments/);
 });
+
+test('reads from stdin when file is -', () => {
+  const input = JSON.stringify({ id: 1 }) + '\n';
+  const result = runCli(['-', 'id == 1'], input);
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, '{"id":1}\n');
+});

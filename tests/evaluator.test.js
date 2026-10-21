@@ -27,6 +27,10 @@ test('splitPath breaks paths into segments', () => {
   assert.deepEqual(splitPath("items[0]['nested.key']"), ['items', '0', 'nested.key']);
 });
 
+test('splitPath trims whitespace around segments', () => {
+  assert.deepEqual(splitPath('a . b [ 0 ] . c'), ['a', 'b', '0', 'c']);
+});
+
 test('project copies selected nested fields', () => {
   const record = { id: 1, user: { name: 'Ada', secret: 'x' } };
   assert.deepEqual(project(record, ['id', 'user.name']), { id: 1, user: { name: 'Ada' } });
