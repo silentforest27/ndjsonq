@@ -131,3 +131,17 @@ test('reads from stdin when file is -', () => {
   assert.equal(result.status, 0);
   assert.equal(result.stdout, '{"id":1}\n');
 });
+
+test('reads from stdin when dash is the trailing positional', () => {
+  const input = JSON.stringify({ id: 1 }) + '\n';
+  const result = runCli(['id == 1', '-'], input);
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, '{"id":1}\n');
+});
+
+test('selects fields whose quoted paths contain commas', () => {
+  const input = JSON.stringify({ values: { 'a,b': 42 }, x: 7 }) + '\n';
+  const result = runCli(['--select', "values['a,b'],x"], input);
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, '{"values":{"a,b":42},"x":7}\n');
+});

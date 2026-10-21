@@ -58,6 +58,74 @@ function setOption(opts, name, value) {
   }
 }
 
+function splitSelectFields(input) {
+  const fields = [];
+  let current = '';
+  let i = 0;
+  let bracketDepth = 0;
+  let quote = null;
+
+  while (i < input.length) {
+    const char = input[i];
+
+    if (quote) {
+      current += char;
+      if (char === '\\' && i + 1 < input.length) {
+        current += input[i + 1];
+        i += 2;
+        continue;
+      }
+      if (char === quote) {
+        quote = null;
+      }
+      i += 1;
+      continue;
+    }
+
+    if (char === '"' || char === "'") {
+      quote = char;
+      current += char;
+      i += 1;
+      continue;
+    }
+
+    if (char === '[') {
+      bracketDepth += 1;
+      current += char;
+      i += 1;
+      continue;
+    }
+
+    if (char === ']') {
+      if (bracketDepth > 0) {
+        bracketDepth -= 1;
+      }
+      current += char;
+      i += 1;
+      continue;
+    }
+
+    if (char === ',' && bracketDepth === 0) {
+      const field = current.trim();
+      if (field) {
+        fields.push(field);
+      }
+      current = '';
+      i += 1;
+      continue;
+    }
+
+    current += char;
+    i += 1;
+  }
+
+  const field = current.trim();
+  if (field) {
+    fields.push(field);
+  }
+  return fields;
+}
+
 function parseArgs(argv) {
   const opts = { format: 'jsonl', count: false };
   const positionals = [];
@@ -114,7 +182,15 @@ function parseArgs(argv) {
     }
   } else if (positionals.length >= 2) {
     const [first, second] = positionals;
-    if (fs.existsSync(first) && !fs.existsSync(second)) {
+    if (first === '-' && second === '-') {
+      opts.file = '-';
+    } else if (first === '-') {
+      opts.file = '-';
+      opts.where = second;
+    } else if (second === '-') {
+      opts.file = '-';
+      opts.where = first;
+    } else if (fs.existsSync(first) && !fs.existsSync(second)) {
       opts.file = first;
       opts.where = second;
     } else if (!fs.existsSync(first) && fs.existsSync(second)) {
@@ -221,9 +297,9 @@ async function run(argv) {
   }
 
   const whereNode = opts.where ? parseExpression(opts.where) : null;
-  const selectFields = opts.select
-    ? opts.select.split(',').map((field) => field.trim()).filter(Boolean)
-    : null;
+  const selectFields = !opts.select
+    ? null
+    : splitSelectFields(opts.select);
 
   const projectRecord = (record) =>
     selectFields ? project(record, selectFields) : record;
@@ -234,12 +310,15 @@ async function run(argv) {
       : process.stdin;
     const rl = readline.createInterface({ input, crlfDelay: Infinity });
     let count = 0;
+    let firstLine = true;
 
     for await (const line of rl) {
-      if (line.trim() === '') continue;
+      const currentLine = firstLine ? line.replace(/^\ufeff/, '') : line;
+      firstLine = false;
+      if (currentLine.trim() === '') continue;
       let record;
       try {
-        record = JSON.parse(line);
+        record = JSON.parse(currentLine);
       } catch (error) {
         throw new Error(`invalid JSON: ${error.message}`);
       }
@@ -257,12 +336,15 @@ async function run(argv) {
   const rl = readline.createInterface({ input, crlfDelay: Infinity });
   let matching = 0;
   let emitted = 0;
+  let firstLine = true;
 
   for await (const line of rl) {
-    if (line.trim() === '') continue;
+    const currentLine = firstLine ? line.replace(/^\ufeff/, '') : line;
+    firstLine = false;
+    if (currentLine.trim() === '') continue;
     let record;
     try {
-      record = JSON.parse(line);
+      record = JSON.parse(currentLine);
     } catch (error) {
       throw new Error(`invalid JSON: ${error.message}`);
     }
