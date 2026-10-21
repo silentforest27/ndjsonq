@@ -113,14 +113,14 @@ function splitPath(path) {
       }
 
       let value = content.trim();
-      if (
+      const wasQuoted =
         value.length >= 2 &&
         ((value.startsWith('"') && value.endsWith('"')) ||
-          (value.startsWith("'") && value.endsWith("'")))
-      ) {
+          (value.startsWith("'") && value.endsWith("'")));
+      if (wasQuoted) {
         value = unescapeBracketValue(value);
       }
-      if (value !== '') {
+      if (value !== '' || wasQuoted) {
         segments.push(value);
       }
       continue;

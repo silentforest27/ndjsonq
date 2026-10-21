@@ -222,6 +222,12 @@ function parseArgs(argv) {
     opts.limit = Infinity;
   } else {
     const value = Number(opts.limit);
+    if (
+      typeof opts.limit === 'string' &&
+      opts.limit.trim() === ''
+    ) {
+      throw new Error('Invalid --limit value');
+    }
     if (!Number.isFinite(value) || !Number.isInteger(value) || value < 0) {
       throw new Error('Invalid --limit value');
     }
@@ -232,6 +238,12 @@ function parseArgs(argv) {
     opts.offset = 0;
   } else {
     const value = Number(opts.offset);
+    if (
+      typeof opts.offset === 'string' &&
+      opts.offset.trim() === ''
+    ) {
+      throw new Error('Invalid --offset value');
+    }
     if (!Number.isFinite(value) || !Number.isInteger(value) || value < 0) {
       throw new Error('Invalid --offset value');
     }
