@@ -156,15 +156,21 @@ function parseArgs(argv) {
         }
       }
     } else if (arg.startsWith('-') && arg.length > 1) {
-      const name = longName(arg.slice(1));
-      if (name === 'count' || name === 'help' || name === 'version') {
-        setOption(opts, name, true);
+      const equals = arg.indexOf('=');
+      if (equals > 0) {
+        setOption(opts, longName(arg.slice(1, equals)), arg.slice(equals + 1));
         i += 1;
       } else {
-        i += 1;
-        if (i >= argv.length) throw new Error(`Missing value for -${arg.slice(1)}`);
-        setOption(opts, name, argv[i]);
-        i += 1;
+        const name = longName(arg.slice(1));
+        if (name === 'count' || name === 'help' || name === 'version') {
+          setOption(opts, name, true);
+          i += 1;
+        } else {
+          i += 1;
+          if (i >= argv.length) throw new Error(`Missing value for -${arg.slice(1)}`);
+          setOption(opts, name, argv[i]);
+          i += 1;
+        }
       }
     } else {
       positionals.push(arg);

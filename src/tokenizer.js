@@ -27,6 +27,14 @@ function tokenize(input) {
             throw new Error('Unterminated string escape');
           }
           const escaped = input[i + 1];
+          if (escaped === 'u') {
+            const hex = input.slice(i + 2, i + 6);
+            if (/^[0-9a-fA-F]{4}$/.test(hex)) {
+              value += String.fromCharCode(parseInt(hex, 16));
+              i += 6;
+              continue;
+            }
+          }
           const escapes = {
             n: '\n',
             t: '\t',
