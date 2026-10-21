@@ -29,6 +29,14 @@ function unescapeBracketValue(value) {
     const char = inner[i];
     if (char === '\\' && i + 1 < inner.length) {
       const escaped = inner[i + 1];
+      if (escaped === 'u') {
+        const hex = inner.slice(i + 2, i + 6);
+        if (/^[0-9a-fA-F]{4}$/.test(hex)) {
+          result += String.fromCharCode(parseInt(hex, 16));
+          i += 6;
+          continue;
+        }
+      }
       result += Object.prototype.hasOwnProperty.call(escapes, escaped)
         ? escapes[escaped]
         : escaped;

@@ -31,6 +31,10 @@ test('splitPath trims whitespace around segments', () => {
   assert.deepEqual(splitPath('a . b [ 0 ] . c'), ['a', 'b', '0', 'c']);
 });
 
+test('splitPath unescapes unicode escapes in bracketed paths', () => {
+  assert.deepEqual(splitPath("values['\\u0041']"), ['values', 'A']);
+});
+
 test('project copies selected nested fields', () => {
   const record = { id: 1, user: { name: 'Ada', secret: 'x' } };
   assert.deepEqual(project(record, ['id', 'user.name']), { id: 1, user: { name: 'Ada' } });
