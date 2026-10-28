@@ -165,7 +165,16 @@ function getPath(record, path) {
 function setPath(record, path, value) {
   const parts = splitPath(path);
   if (parts.length === 0 || record == null || typeof record !== 'object') return;
-  if (parts.some((part) => part === '__proto__')) return;
+  if (
+    parts.some(
+      (part) =>
+        part === '__proto__' ||
+        part === 'constructor' ||
+        part === 'prototype'
+    )
+  ) {
+    return;
+  }
   let current = record;
   for (let i = 0; i < parts.length - 1; i += 1) {
     const part = parts[i];
