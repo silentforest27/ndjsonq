@@ -282,6 +282,12 @@ function callFunction(name, args) {
       return args[0] == null ? '' : String(args[0]);
     case 'abs':
       return Math.abs(toNumber(args[0]));
+    case 'floor':
+      return Math.floor(toNumber(args[0]));
+    case 'ceil':
+      return Math.ceil(toNumber(args[0]));
+    case 'round':
+      return Math.round(toNumber(args[0]));
     case 'min':
       return Math.min(...args.map(toNumber));
     case 'max':
