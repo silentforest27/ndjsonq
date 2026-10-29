@@ -35,6 +35,11 @@ test('splitPath unescapes unicode escapes in bracketed paths', () => {
   assert.deepEqual(splitPath("values['\\u0041']"), ['values', 'A']);
 });
 
+test('splitPath preserves text after a unicode escape in bracketed paths', () => {
+  assert.deepEqual(splitPath("values['\\u0041tail']"), ['values', 'Atail']);
+  assert.deepEqual(splitPath("values['\\u0041\\u0042']"), ['values', 'AB']);
+});
+
 test('project copies selected nested fields', () => {
   const record = { id: 1, user: { name: 'Ada', secret: 'x' } };
   assert.deepEqual(project(record, ['id', 'user.name']), { id: 1, user: { name: 'Ada' } });

@@ -33,7 +33,7 @@ function unescapeBracketValue(value) {
         const hex = inner.slice(i + 2, i + 6);
         if (/^[0-9a-fA-F]{4}$/.test(hex)) {
           result += String.fromCharCode(parseInt(hex, 16));
-          i += 6;
+          i += 5;
           continue;
         }
       }
