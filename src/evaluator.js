@@ -297,6 +297,19 @@ function callFunction(name, args) {
     case 'includes':
     case 'contains':
       return contains(args[0], args[1]);
+    case 'sum': {
+      if (!Array.isArray(args[0])) return toNumber(args[0]);
+      let total = 0;
+      for (const item of args[0]) total += toNumber(item);
+      return total;
+    }
+    case 'avg': {
+      const values = Array.isArray(args[0]) ? args[0] : [args[0]];
+      if (values.length === 0) return 0;
+      let total = 0;
+      for (const item of values) total += toNumber(item);
+      return total / values.length;
+    }
     default:
       throw new Error(`Unknown function: ${name}`);
   }
