@@ -87,7 +87,9 @@ Available functions:
 
 ```text
 length, lower, upper, trim, exists, type, number, string,
-abs, min, max, keys, contains, includes
+abs, floor, ceil, round, pow, sqrt, min, max,
+keys, contains, includes,
+sum, avg
 ```
 
 ## Examples

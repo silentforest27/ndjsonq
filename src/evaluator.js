@@ -293,6 +293,10 @@ function callFunction(name, args) {
       const factor = 10 ** decimals;
       return Math.round(value * factor) / factor;
     }
+    case 'pow':
+      return Math.pow(toNumber(args[0]), toNumber(args[1]));
+    case 'sqrt':
+      return Math.sqrt(toNumber(args[0]));
     case 'min':
       return Math.min(...args.map(toNumber));
     case 'max':
