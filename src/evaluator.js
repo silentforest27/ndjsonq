@@ -286,8 +286,13 @@ function callFunction(name, args) {
       return Math.floor(toNumber(args[0]));
     case 'ceil':
       return Math.ceil(toNumber(args[0]));
-    case 'round':
-      return Math.round(toNumber(args[0]));
+    case 'round': {
+      const value = toNumber(args[0]);
+      const decimals = args.length > 1 ? Math.trunc(toNumber(args[1])) : 0;
+      if (decimals <= 0) return Math.round(value);
+      const factor = 10 ** decimals;
+      return Math.round(value * factor) / factor;
+    }
     case 'min':
       return Math.min(...args.map(toNumber));
     case 'max':
