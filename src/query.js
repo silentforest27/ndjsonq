@@ -279,11 +279,17 @@ async function run(argv) {
 
         matched += 1;
         if (matched <= options.offset) {
+          if (
+            options.limit !== null &&
+            matched >= options.offset + options.limit
+          ) {
+            break;
+          }
           continue;
         }
 
         if (options.limit !== null && outputCount >= options.limit) {
-          continue;
+          break;
         }
 
         const output = fields ? project(record, fields) : record;
@@ -293,6 +299,10 @@ async function run(argv) {
             : JSON.stringify(output);
         process.stdout.write(`${text}\n`);
         outputCount += 1;
+
+        if (options.limit !== null && outputCount >= options.limit) {
+          break;
+        }
       }
     } finally {
       rl.close();

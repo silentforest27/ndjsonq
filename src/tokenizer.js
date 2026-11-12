@@ -138,6 +138,12 @@ function tokenize(input) {
       continue;
     }
 
+    if (char === '?' || char === ':') {
+      tokens.push({ type: 'sym', value: char });
+      i += 1;
+      continue;
+    }
+
     if (char === '.') {
       tokens.push({ type: 'sym', value: '.' });
       i += 1;

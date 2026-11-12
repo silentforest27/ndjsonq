@@ -45,3 +45,19 @@ test('array literals and string concatenation', () => {
   assert.deepEqual(evalExpr('[1, 2, 3]', {}), [1, 2, 3]);
   assert.equal(evalExpr('first + " " + last', { first: 'Ada', last: 'Lovelace' }), 'Ada Lovelace');
 });
+
+test('ternary expressions', () => {
+  assert.equal(evalExpr('age >= 18 ? "adult" : "minor"', { age: 20 }), 'adult');
+  assert.equal(evalExpr('age >= 18 ? "adult" : "minor"', { age: 16 }), 'minor');
+  assert.deepEqual(evalExpr('flag ? [1, 2] : [3, 4]', { flag: false }), [3, 4]);
+  assert.equal(evalExpr('false ? missing() : 42', {}), 42);
+});
+
+test('aggregate helpers accept arrays or arguments', () => {
+  assert.equal(evalExpr('sum(values)', { values: [1, 2, 3] }), 6);
+  assert.equal(evalExpr('sum(1, 2, 3)'), 6);
+  assert.equal(evalExpr('avg(values)', { values: [1, 2, 3] }), 2);
+  assert.equal(evalExpr('avg(1, 2, 3)'), 2);
+  assert.equal(evalExpr('min(values)', { values: [3, 1, 2] }), 1);
+  assert.equal(evalExpr('max(1, 2, 3)'), 3);
+});

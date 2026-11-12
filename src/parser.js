@@ -46,7 +46,20 @@ class Parser {
   }
 
   expression() {
-    return this.or();
+    const node = this.or();
+    if (this.current.type === 'sym' && this.current.value === '?') {
+      this.advance();
+      const consequent = this.expression();
+      this.expect('sym', ':');
+      const alternate = this.expression();
+      return {
+        type: 'ternary',
+        condition: node,
+        consequent,
+        alternate
+      };
+    }
+    return node;
   }
 
   or() {

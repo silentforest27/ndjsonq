@@ -61,7 +61,13 @@ items[0].name
 Supported operators:
 
 ```text
-== != < <= > >= && || ! + - * / %
+== != < <= > >= && || ! + - * / % ? :
+```
+
+Conditional expressions choose between two values:
+
+```text
+age >= 18 ? "adult" : "minor"
 ```
 
 Membership tests use `in`:
@@ -92,12 +98,15 @@ keys, contains, includes,
 sum, avg
 ```
 
+Aggregate helpers accept either an array or multiple arguments.
+
 ## Examples
 
 ```sh
 ndjsonq events.ndjson 'type == "login" && user.active'
 ndjsonq events.ndjson 'contains(tags, "urgent")'
 ndjsonq events.ndjson --select user.id,user.name 'user.age >= 21'
+ndjsonq events.ndjson 'score > 90 ? "pass" : "fail"'
 ```
 
 ## Development

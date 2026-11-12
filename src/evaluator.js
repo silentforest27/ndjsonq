@@ -229,6 +229,19 @@ function toNumber(value) {
   return Number.isNaN(number) ? 0 : number;
 }
 
+function collectValues(args) {
+  const values = [];
+  function visit(value) {
+    if (Array.isArray(value)) {
+      for (const item of value) visit(item);
+    } else {
+      values.push(value);
+    }
+  }
+  for (const arg of args) visit(arg);
+  return values;
+}
+
 function compareLess(a, b) {
   if (typeof a === 'number' && typeof b === 'number') return a < b;
   if (typeof a === 'string' && typeof b === 'string') return a < b;
@@ -297,23 +310,29 @@ function callFunction(name, args) {
       return Math.pow(toNumber(args[0]), toNumber(args[1]));
     case 'sqrt':
       return Math.sqrt(toNumber(args[0]));
-    case 'min':
-      return Math.min(...args.map(toNumber));
-    case 'max':
-      return Math.max(...args.map(toNumber));
+    case 'min': {
+      const values = collectValues(args);
+      if (values.length === 0) return Math.min();
+      return Math.min(...values.map(toNumber));
+    }
+    case 'max': {
+      const values = collectValues(args);
+      if (values.length === 0) return Math.max();
+      return Math.max(...values.map(toNumber));
+    }
     case 'keys':
       return args[0] && typeof args[0] === 'object' ? Object.keys(args[0]) : [];
     case 'includes':
     case 'contains':
       return contains(args[0], args[1]);
     case 'sum': {
-      if (!Array.isArray(args[0])) return toNumber(args[0]);
+      const values = collectValues(args);
       let total = 0;
-      for (const item of args[0]) total += toNumber(item);
+      for (const item of values) total += toNumber(item);
       return total;
     }
     case 'avg': {
-      const values = Array.isArray(args[0]) ? args[0] : [args[0]];
+      const values = collectValues(args);
       if (values.length === 0) return 0;
       let total = 0;
       for (const item of values) total += toNumber(item);
@@ -351,6 +370,12 @@ function evaluateNode(node, record) {
       return toNumber(evaluateNode(node.operand, record));
     case 'not':
       return !truthy(evaluateNode(node.operand, record));
+    case 'ternary': {
+      const condition = evaluateNode(node.condition, record);
+      return truthy(condition)
+        ? evaluateNode(node.consequent, record)
+        : evaluateNode(node.alternate, record);
+    }
     case 'bin': {
       const left = evaluateNode(node.left, record);
       const right = evaluateNode(node.right, record);
