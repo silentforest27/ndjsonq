@@ -61,3 +61,38 @@ test('aggregate helpers accept arrays or arguments', () => {
   assert.equal(evalExpr('min(values)', { values: [3, 1, 2] }), 1);
   assert.equal(evalExpr('max(1, 2, 3)'), 3);
 });
+
+test('string, array, object, and utility helpers', () => {
+  assert.equal(evalExpr('join(values, ",")', { values: ['a', 'b'] }), 'a,b');
+  assert.deepEqual(evalExpr('split(text, ",")', { text: 'a,b' }), ['a', 'b']);
+  assert.equal(evalExpr('slice(text, 1, 3)', { text: 'abcd' }), 'bc');
+  assert.deepEqual(evalExpr('slice(values, 1)', { values: [1, 2, 3] }), [2, 3]);
+  assert.equal(evalExpr('replace(text, "a", "b")', { text: 'banana' }), 'banana'.replace('a', 'b'));
+  assert.equal(evalExpr('replaceAll(text, "a", "b")', { text: 'banana' }), 'bbnbnb');
+  assert.equal(evalExpr('startsWith(text, "ab")', { text: 'abc' }), true);
+  assert.equal(evalExpr('endsWith(text, "bc")', { text: 'abc' }), true);
+  assert.equal(evalExpr('indexOf(values, 2)', { values: [1, 2, 3] }), 1);
+  assert.deepEqual(evalExpr('reverse(values)', { values: [1, 2, 3] }), [3, 2, 1]);
+  assert.deepEqual(evalExpr('sort(values)', { values: [3, 1, 2] }), [1, 2, 3]);
+  assert.deepEqual(evalExpr('sort(values, "desc")', { values: [3, 1, 2] }), [3, 2, 1]);
+  assert.deepEqual(evalExpr('unique(values)', { values: [1, 2, 1] }), [1, 2]);
+  assert.deepEqual(evalExpr('distinct(values)', { values: [1, 2, 1] }), [1, 2]);
+  assert.deepEqual(evalExpr('flatten(values)', { values: [1, [2, [3]]] }), [1, 2, [3]]);
+  assert.deepEqual(evalExpr('flatten(values, 2)', { values: [1, [2, [3]]] }), [1, 2, 3]);
+  assert.equal(evalExpr('first(values)', { values: [1, 2] }), 1);
+  assert.equal(evalExpr('head(values)', { values: [1, 2] }), 1);
+  assert.equal(evalExpr('last(values)', { values: [1, 2] }), 2);
+  assert.deepEqual(evalExpr('tail(values)', { values: [1, 2, 3] }), [2, 3]);
+  assert.deepEqual(evalExpr('concat(a, b)', { a: [1], b: [2, 3] }), [1, 2, 3]);
+  assert.deepEqual(evalExpr('range(3)'), [0, 1, 2]);
+  assert.deepEqual(evalExpr('range(1, 4)'), [1, 2, 3]);
+  assert.deepEqual(evalExpr('values(obj)', { obj: { a: 1, b: 2 } }), [1, 2]);
+  assert.deepEqual(evalExpr('entries(obj)', { obj: { a: 1 } }), [['a', 1]]);
+  assert.equal(evalExpr('get(obj, "missing", 42)', { obj: { a: 1 } }), 42);
+  assert.equal(evalExpr('has(obj, "a")', { obj: { a: 1 } }), true);
+  assert.deepEqual(evalExpr('merge(a, b)', { a: { x: 1 }, b: { y: 2 } }), { x: 1, y: 2 });
+  assert.equal(evalExpr('clamp(n, 0, 10)', { n: 15 }), 10);
+  assert.equal(evalExpr('sign(n)', { n: -5 }), -1);
+  assert.equal(evalExpr('trunc(n)', { n: 3.9 }), 3);
+  assert.equal(evalExpr('coalesce(a, b)', { a: null, b: 7 }), 7);
+});

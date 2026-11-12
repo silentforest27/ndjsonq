@@ -92,10 +92,13 @@ null
 Available functions:
 
 ```text
-length, lower, upper, trim, exists, type, number, string,
-abs, floor, ceil, round, pow, sqrt, min, max,
-keys, contains, includes,
-sum, avg
+length, lower, upper, trim, trimStart, trimEnd, exists, type, number, string,
+abs, floor, ceil, round, pow, sqrt, sign, trunc, clamp, min, max,
+keys, values, entries, get, has, merge,
+contains, includes, indexOf, startsWith, endsWith, replace, replaceAll,
+repeat, padStart, padEnd, join, split, slice, reverse, sort, unique,
+distinct, flatten, first, head, last, tail, concat, range,
+sum, avg, coalesce
 ```
 
 Aggregate helpers accept either an array or multiple arguments.

@@ -267,6 +267,42 @@ function contains(collection, value) {
   return false;
 }
 
+function compareSort(a, b) {
+  if (a === b) return 0;
+  if (a == null) return b == null ? 0 : -1;
+  if (b == null) return 1;
+  if (typeof a === 'number' && typeof b === 'number') {
+    if (a < b) return -1;
+    if (a > b) return 1;
+    return 0;
+  }
+  if (typeof a === 'boolean' && typeof b === 'boolean') {
+    if (a === b) return 0;
+    return a ? 1 : -1;
+  }
+  const left = String(a);
+  const right = String(b);
+  if (left < right) return -1;
+  if (left > right) return 1;
+  return 0;
+}
+
+function flattenArray(value, depth) {
+  if (!Array.isArray(value)) {
+    return value == null ? [] : [value];
+  }
+  if (depth <= 0) return [...value];
+  const result = [];
+  for (const item of value) {
+    if (Array.isArray(item)) {
+      result.push(...flattenArray(item, depth - 1));
+    } else {
+      result.push(item);
+    }
+  }
+  return result;
+}
+
 function callFunction(name, args) {
   switch (name) {
     case 'length': {
@@ -281,6 +317,12 @@ function callFunction(name, args) {
       return typeof args[0] === 'string' ? args[0].toUpperCase() : args[0];
     case 'trim':
       return typeof args[0] === 'string' ? args[0].trim() : args[0];
+    case 'trimStart':
+    case 'trimLeft':
+      return typeof args[0] === 'string' ? args[0].trimStart() : args[0];
+    case 'trimEnd':
+    case 'trimRight':
+      return typeof args[0] === 'string' ? args[0].trimEnd() : args[0];
     case 'exists':
       return args[0] !== undefined && args[0] !== null;
     case 'type': {
@@ -310,6 +352,16 @@ function callFunction(name, args) {
       return Math.pow(toNumber(args[0]), toNumber(args[1]));
     case 'sqrt':
       return Math.sqrt(toNumber(args[0]));
+    case 'sign':
+      return Math.sign(toNumber(args[0]));
+    case 'trunc':
+      return Math.trunc(toNumber(args[0]));
+    case 'clamp': {
+      const value = toNumber(args[0]);
+      const min = args.length > 1 ? toNumber(args[1]) : value;
+      const max = args.length > 2 ? toNumber(args[2]) : value;
+      return Math.min(Math.max(value, min), max);
+    }
     case 'min': {
       const values = collectValues(args);
       if (values.length === 0) return Math.min();
@@ -322,9 +374,242 @@ function callFunction(name, args) {
     }
     case 'keys':
       return args[0] && typeof args[0] === 'object' ? Object.keys(args[0]) : [];
+    case 'values': {
+      const value = args[0];
+      if (Array.isArray(value)) return [...value];
+      if (value && typeof value === 'object') return Object.values(value);
+      return [];
+    }
+    case 'entries': {
+      const value = args[0];
+      if (Array.isArray(value)) return value.map((item, index) => [index, item]);
+      if (value && typeof value === 'object') return Object.entries(value);
+      return [];
+    }
+    case 'get': {
+      const target = args[0];
+      const key = args.length > 1 ? args[1] : undefined;
+      if (Array.isArray(target)) {
+        const index = Math.trunc(toNumber(key));
+        if (index >= 0 && index < target.length) return target[index];
+      } else if (target && typeof target === 'object') {
+        const property = String(key == null ? '' : key);
+        if (Object.prototype.hasOwnProperty.call(target, property)) {
+          return target[property];
+        }
+      }
+      return args.length > 2 ? args[2] : undefined;
+    }
+    case 'has': {
+      const target = args[0];
+      const key = args.length > 1 ? args[1] : undefined;
+      if (Array.isArray(target)) {
+        const index = Math.trunc(toNumber(key));
+        return index >= 0 && index < target.length;
+      }
+      if (target && typeof target === 'object') {
+        return Object.prototype.hasOwnProperty.call(
+          target,
+          String(key == null ? '' : key)
+        );
+      }
+      if (typeof target === 'string') {
+        return target.includes(String(key == null ? '' : key));
+      }
+      return false;
+    }
+    case 'merge': {
+      const result = {};
+      for (const arg of args) {
+        if (arg && typeof arg === 'object' && !Array.isArray(arg)) {
+          Object.assign(result, arg);
+        }
+      }
+      return result;
+    }
+    case 'coalesce': {
+      for (const value of args) {
+        if (value !== null && value !== undefined) return value;
+      }
+      return args.length ? args[args.length - 1] : null;
+    }
     case 'includes':
     case 'contains':
       return contains(args[0], args[1]);
+    case 'indexOf': {
+      const collection = args[0];
+      const value = args[1];
+      if (Array.isArray(collection)) {
+        return collection.findIndex((item) => deepEqual(item, value));
+      }
+      if (typeof collection === 'string') {
+        return collection.indexOf(String(value == null ? '' : value));
+      }
+      if (collection && typeof collection === 'object') {
+        return Object.keys(collection).indexOf(String(value == null ? '' : value));
+      }
+      return -1;
+    }
+    case 'startsWith': {
+      const text = args[0] == null ? '' : String(args[0]);
+      const value = args[1] == null ? '' : String(args[1]);
+      return text.startsWith(value);
+    }
+    case 'endsWith': {
+      const text = args[0] == null ? '' : String(args[0]);
+      const value = args[1] == null ? '' : String(args[1]);
+      return text.endsWith(value);
+    }
+    case 'replace': {
+      const text = args[0] == null ? '' : String(args[0]);
+      const search = args.length > 1 && args[1] != null ? String(args[1]) : '';
+      const replacement =
+        args.length > 2 && args[2] != null ? String(args[2]) : '';
+      if (search === '') return text;
+      return text.replace(search, replacement);
+    }
+    case 'replaceAll': {
+      const text = args[0] == null ? '' : String(args[0]);
+      const search = args.length > 1 && args[1] != null ? String(args[1]) : '';
+      const replacement =
+        args.length > 2 && args[2] != null ? String(args[2]) : '';
+      if (search === '') return text;
+      return text.split(search).join(replacement);
+    }
+    case 'repeat': {
+      const text = args[0] == null ? '' : String(args[0]);
+      const count = args.length > 1 ? Math.trunc(toNumber(args[1])) : 0;
+      if (count <= 0) return '';
+      return text.repeat(count);
+    }
+    case 'padStart': {
+      const text = args[0] == null ? '' : String(args[0]);
+      const length = args.length > 1 ? Math.trunc(toNumber(args[1])) : 0;
+      const pad = args.length > 2 && args[2] != null ? String(args[2]) : ' ';
+      return text.padStart(length, pad || ' ');
+    }
+    case 'padEnd': {
+      const text = args[0] == null ? '' : String(args[0]);
+      const length = args.length > 1 ? Math.trunc(toNumber(args[1])) : 0;
+      const pad = args.length > 2 && args[2] != null ? String(args[2]) : ' ';
+      return text.padEnd(length, pad || ' ');
+    }
+    case 'join': {
+      const value = args[0];
+      if (!Array.isArray(value)) return value == null ? '' : String(value);
+      const separator =
+        args.length > 1 && args[1] != null ? String(args[1]) : '';
+      return value
+        .map((item) => (item == null ? '' : String(item)))
+        .join(separator);
+    }
+    case 'split': {
+      const text = args[0] == null ? '' : String(args[0]);
+      if (args.length < 2 || args[1] == null) return [text];
+      return text.split(String(args[1]));
+    }
+    case 'slice': {
+      const value = args[0];
+      const start = args.length > 1 ? toNumber(args[1]) : 0;
+      const end = args.length > 2 ? toNumber(args[2]) : undefined;
+      if (typeof value === 'string') return value.slice(start, end);
+      if (Array.isArray(value)) return value.slice(start, end);
+      return value == null ? '' : String(value).slice(start, end);
+    }
+    case 'reverse': {
+      const value = args[0];
+      if (Array.isArray(value)) return [...value].reverse();
+      if (typeof value === 'string') return [...value].reverse().join('');
+      return value;
+    }
+    case 'sort': {
+      if (!Array.isArray(args[0])) return [];
+      const result = [...args[0]];
+      const order = args.length > 1 ? args[1] : 'asc';
+      const descending =
+        order === 'desc' || order === false || order === -1;
+      result.sort((a, b) => {
+        const comparison = compareSort(a, b);
+        return descending ? -comparison : comparison;
+      });
+      return result;
+    }
+    case 'unique':
+    case 'distinct': {
+      if (!Array.isArray(args[0])) return [];
+      const result = [];
+      for (const item of args[0]) {
+        if (!result.some((existing) => deepEqual(existing, item))) {
+          result.push(item);
+        }
+      }
+      return result;
+    }
+    case 'flatten': {
+      const depth = args.length > 1 ? Math.trunc(toNumber(args[1])) : 1;
+      return flattenArray(args[0], depth);
+    }
+    case 'first':
+    case 'head': {
+      const value = args[0];
+      if (Array.isArray(value)) return value.length ? value[0] : undefined;
+      if (typeof value === 'string') {
+        return value.length ? value[0] : undefined;
+      }
+      return undefined;
+    }
+    case 'last': {
+      const value = args[0];
+      if (Array.isArray(value)) {
+        return value.length ? value[value.length - 1] : undefined;
+      }
+      if (typeof value === 'string') {
+        return value.length ? value[value.length - 1] : undefined;
+      }
+      return undefined;
+    }
+    case 'tail': {
+      const value = args[0];
+      if (Array.isArray(value)) return value.slice(1);
+      if (typeof value === 'string') return value.slice(1);
+      return [];
+    }
+    case 'concat': {
+      const result = [];
+      for (const arg of args) {
+        if (Array.isArray(arg)) {
+          result.push(...arg);
+        } else {
+          result.push(arg);
+        }
+      }
+      return result;
+    }
+    case 'range': {
+      let start;
+      let end;
+      let step = 1;
+      if (args.length === 1) {
+        start = 0;
+        end = toNumber(args[0]);
+      } else {
+        start = toNumber(args[0]);
+        end = toNumber(args[1]);
+        if (args.length > 2) step = toNumber(args[2]);
+      }
+      if (step === 0) step = 1;
+      const result = [];
+      if (step > 0) {
+        for (let value = start; value < end; value += step) {
+          result.push(value);
+        }
+      } else {
+        for (let value = start; value > end; value += step) {
+          result.push(value);
+        }
+      }
+      return result;
+    }
     case 'sum': {
       const values = collectValues(args);
       let total = 0;
