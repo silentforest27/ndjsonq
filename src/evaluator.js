@@ -364,8 +364,8 @@ function callFunction(name, args) {
       return Math.trunc(toNumber(args[0]));
     case 'clamp': {
       const value = toNumber(args[0]);
-      const min = args.length > 1 ? toNumber(args[1]) : value;
-      const max = args.length > 2 ? toNumber(args[2]) : value;
+      const min = args.length > 1 ? toNumber(args[1]) : -Infinity;
+      const max = args.length > 2 ? toNumber(args[2]) : Infinity;
       return Math.min(Math.max(value, min), max);
     }
     case 'min': {
