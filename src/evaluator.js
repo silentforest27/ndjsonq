@@ -146,9 +146,15 @@ function getPath(record, path) {
     if (current == null) return undefined;
     if (Array.isArray(current) && /^\d+$/.test(part)) {
       current = current[Number(part)];
-    } else if (typeof current === 'string' && /^\d+$/.test(part)) {
-      const index = Number(part);
-      current = index >= 0 && index < current.length ? current[index] : undefined;
+    } else if (typeof current === 'string') {
+      if (/^\d+$/.test(part)) {
+        const index = Number(part);
+        current = index >= 0 && index < current.length ? current[index] : undefined;
+      } else if (part === 'length') {
+        current = current.length;
+      } else {
+        return undefined;
+      }
     } else if (typeof current === 'object') {
       if (Object.prototype.hasOwnProperty.call(current, part)) {
         current = current[part];
@@ -422,7 +428,16 @@ function callFunction(name, args) {
       const result = {};
       for (const arg of args) {
         if (arg && typeof arg === 'object' && !Array.isArray(arg)) {
-          Object.assign(result, arg);
+          for (const key of Object.keys(arg)) {
+            if (
+              key === '__proto__' ||
+              key === 'constructor' ||
+              key === 'prototype'
+            ) {
+              continue;
+            }
+            result[key] = arg[key];
+          }
         }
       }
       return result;
@@ -479,20 +494,20 @@ function callFunction(name, args) {
     case 'repeat': {
       const text = args[0] == null ? '' : String(args[0]);
       const count = args.length > 1 ? Math.trunc(toNumber(args[1])) : 0;
-      if (count <= 0) return '';
+      if (!Number.isFinite(count) || count <= 0) return '';
       return text.repeat(count);
     }
     case 'padStart': {
       const text = args[0] == null ? '' : String(args[0]);
       const length = args.length > 1 ? Math.trunc(toNumber(args[1])) : 0;
       const pad = args.length > 2 && args[2] != null ? String(args[2]) : ' ';
-      return text.padStart(length, pad || ' ');
+      return text.padStart(length, pad);
     }
     case 'padEnd': {
       const text = args[0] == null ? '' : String(args[0]);
       const length = args.length > 1 ? Math.trunc(toNumber(args[1])) : 0;
       const pad = args.length > 2 && args[2] != null ? String(args[2]) : ' ';
-      return text.padEnd(length, pad || ' ');
+      return text.padEnd(length, pad);
     }
     case 'join': {
       const value = args[0];
