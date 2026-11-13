@@ -173,7 +173,10 @@ class Parser {
       if (!(this.current.type === 'sym' && this.current.value === ']')) {
         do {
           items.push(this.expression());
-        } while (this.match('sym', ','));
+        } while (
+          this.match('sym', ',') &&
+          !(this.current.type === 'sym' && this.current.value === ']')
+        );
       }
       this.expect('sym', ']');
       return { type: 'array', items };
@@ -192,7 +195,10 @@ class Parser {
         if (!(this.current.type === 'sym' && this.current.value === ')')) {
           do {
             args.push(this.expression());
-          } while (this.match('sym', ','));
+          } while (
+            this.match('sym', ',') &&
+            !(this.current.type === 'sym' && this.current.value === ')')
+          );
         }
         this.expect('sym', ')');
         return { type: 'call', name, args };

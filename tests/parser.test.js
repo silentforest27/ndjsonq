@@ -96,3 +96,8 @@ test('string, array, object, and utility helpers', () => {
   assert.equal(evalExpr('trunc(n)', { n: 3.9 }), 3);
   assert.equal(evalExpr('coalesce(a, b)', { a: null, b: 7 }), 7);
 });
+
+test('trailing commas are allowed', () => {
+  assert.deepEqual(evalExpr('[1, 2, 3,]', {}), [1, 2, 3]);
+  assert.equal(evalExpr('sum(1, 2, 3,)', {}), 6);
+});
