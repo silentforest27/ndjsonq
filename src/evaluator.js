@@ -481,7 +481,9 @@ function callFunction(name, args) {
       const replacement =
         args.length > 2 && args[2] != null ? String(args[2]) : '';
       if (search === '') return text;
-      return text.replace(search, replacement);
+      const index = text.indexOf(search);
+      if (index === -1) return text;
+      return text.slice(0, index) + replacement + text.slice(index + search.length);
     }
     case 'replaceAll': {
       const text = args[0] == null ? '' : String(args[0]);

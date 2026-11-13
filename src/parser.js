@@ -73,21 +73,13 @@ class Parser {
   }
 
   and() {
-    let node = this.not();
+    let node = this.comparison();
     while (this.current.type === 'op' && this.current.value === '&&') {
       this.advance();
-      const right = this.not();
+      const right = this.comparison();
       node = { type: 'and', left: node, right };
     }
     return node;
-  }
-
-  not() {
-    if (this.current.type === 'op' && this.current.value === '!') {
-      this.advance();
-      return { type: 'not', operand: this.not() };
-    }
-    return this.comparison();
   }
 
   comparison() {
@@ -136,6 +128,10 @@ class Parser {
   }
 
   unary() {
+    if (this.current.type === 'op' && this.current.value === '!') {
+      this.advance();
+      return { type: 'not', operand: this.unary() };
+    }
     if (this.current.type === 'op' && this.current.value === '-') {
       this.advance();
       return { type: 'neg', operand: this.unary() };
