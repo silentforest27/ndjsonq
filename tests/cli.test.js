@@ -145,3 +145,16 @@ test('selects fields whose quoted paths contain commas', () => {
   assert.equal(result.status, 0);
   assert.equal(result.stdout, '{"values":{"a,b":42},"x":7}\n');
 });
+
+test('strips a leading UTF-8 BOM from input', () => {
+  const input = '\uFEFF' + JSON.stringify({ id: 1 }) + '\n';
+  const result = runCli([], input);
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, '{"id":1}\n');
+});
+
+test('prints the version number', () => {
+  const result = runCli(['--version']);
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, '1.0.0\n');
+});

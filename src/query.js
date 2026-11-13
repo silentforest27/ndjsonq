@@ -6,6 +6,7 @@ const readline = require('node:readline');
 
 const { parseExpression } = require('./parser');
 const { evaluate, truthy, project } = require('./evaluator');
+const { version } = require('../package.json');
 
 const USAGE = `Usage: ndjsonq [options] [file] [expression]
 
@@ -18,6 +19,7 @@ Options:
   --offset N        Number of matching records to skip
   --skip N          Alias for --offset
   --count           Count matching records instead of printing them
+  -V, --version     Show version number
   -h, --help        Show this help message
 
 Reads from standard input when no file is given or when file is "-".
@@ -101,6 +103,7 @@ function parseArgs(argv) {
     limit: null,
     offset: 0,
     count: false,
+    version: false,
     help: false
   };
   const positionals = [];
@@ -115,6 +118,11 @@ function parseArgs(argv) {
 
     if (arg === '-h' || arg === '--help') {
       options.help = true;
+      continue;
+    }
+
+    if (arg === '-V' || arg === '--version') {
+      options.version = true;
       continue;
     }
 
@@ -224,6 +232,11 @@ async function run(argv) {
       return 0;
     }
 
+    if (options.version) {
+      process.stdout.write(`${version}\n`);
+      return 0;
+    }
+
     if (options.format !== 'json' &&
         options.format !== 'compact' &&
         options.format !== 'pretty') {
@@ -252,9 +265,15 @@ async function run(argv) {
     let count = 0;
     let matched = 0;
     let outputCount = 0;
+    let isFirstLine = true;
 
     try {
-      for await (const line of rl) {
+      for await (const rawLine of rl) {
+        const line = isFirstLine
+          ? rawLine.replace(/^\uFEFF/, '')
+          : rawLine;
+        isFirstLine = false;
+
         if (line.trim() === '') {
           continue;
         }
