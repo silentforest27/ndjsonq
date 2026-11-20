@@ -95,6 +95,13 @@ test('reports invalid JSON and exits nonzero', () => {
   assert.match(result.stderr, /invalid JSON/);
 });
 
+test('reports the line number for invalid JSON', () => {
+  const input = `${JSON.stringify({ id: 1 })}\n{not json}\n`;
+  const result = runCli([], input);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /invalid JSON on line 2/);
+});
+
 test('pretty-prints records', () => {
   const input = JSON.stringify({ id: 2, age: 20 });
   const result = runCli(['--format', 'pretty'], input);

@@ -266,9 +266,11 @@ async function run(argv) {
     let matched = 0;
     let outputCount = 0;
     let isFirstLine = true;
+    let lineNumber = 0;
 
     try {
       for await (const rawLine of rl) {
+        lineNumber += 1;
         const line = isFirstLine
           ? rawLine.replace(/^\uFEFF/, '')
           : rawLine;
@@ -282,7 +284,7 @@ async function run(argv) {
         try {
           record = JSON.parse(line);
         } catch {
-          throw new Error('invalid JSON');
+          throw new Error(`invalid JSON on line ${lineNumber}`);
         }
 
         const isMatch = filter ? truthy(evaluate(filter, record)) : true;
