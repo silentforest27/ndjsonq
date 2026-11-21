@@ -658,12 +658,20 @@ function evaluateNode(node, record) {
       const index = evaluateNode(node.index, record);
       if (target == null) return undefined;
       if (typeof target === 'string') {
-        return target[index];
+        const key = String(index == null ? '' : index);
+        if (/^\d+$/.test(key)) {
+          const position = Number(key);
+          return position >= 0 && position < target.length
+            ? target[position]
+            : undefined;
+        }
+        if (key === 'length') return target.length;
+        return undefined;
       }
       if (Array.isArray(target)) {
         const key = String(index == null ? '' : index);
         if (/^\d+$/.test(key)) {
-          return target[index];
+          return target[Number(key)];
         }
         return Object.prototype.hasOwnProperty.call(target, key)
           ? target[key]
@@ -675,7 +683,7 @@ function evaluateNode(node, record) {
           ? target[key]
           : undefined;
       }
-      return target[index];
+      return undefined;
     }
     case 'member': {
       const target = evaluateNode(node.target, record);
