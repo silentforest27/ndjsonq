@@ -211,20 +211,36 @@ function project(record, fields) {
 
 function deepEqual(a, b) {
   if (a === b) return true;
-  if (a == null || b == null) return a == b;
-  if (typeof a !== typeof b) return false;
-  if (typeof a !== 'object') return false;
-  if (Array.isArray(a) !== Array.isArray(b)) return false;
-  if (Array.isArray(a)) {
-    if (a.length !== b.length) return false;
-    return a.every((item, index) => deepEqual(item, b[index]));
+  const stack = [[a, b]];
+  while (stack.length > 0) {
+    const [left, right] = stack.pop();
+    if (left === right) continue;
+    if (left == null || right == null) {
+      if (left == right) continue;
+      return false;
+    }
+    if (typeof left !== typeof right || typeof left !== 'object') {
+      return false;
+    }
+    if (Array.isArray(left) !== Array.isArray(right)) {
+      return false;
+    }
+    if (Array.isArray(left)) {
+      if (left.length !== right.length) return false;
+      for (let i = 0; i < left.length; i += 1) {
+        stack.push([left[i], right[i]]);
+      }
+    } else {
+      const keysLeft = Object.keys(left);
+      const keysRight = Object.keys(right);
+      if (keysLeft.length !== keysRight.length) return false;
+      for (const key of keysLeft) {
+        if (!Object.prototype.hasOwnProperty.call(right, key)) return false;
+        stack.push([left[key], right[key]]);
+      }
+    }
   }
-  const keysA = Object.keys(a);
-  const keysB = Object.keys(b);
-  if (keysA.length !== keysB.length) return false;
-  return keysA.every(
-    (key) => Object.prototype.hasOwnProperty.call(b, key) && deepEqual(a[key], b[key])
-  );
+  return true;
 }
 
 function toNumber(value) {
@@ -237,14 +253,20 @@ function toNumber(value) {
 
 function collectValues(args) {
   const values = [];
-  function visit(value) {
+  const stack = [];
+  for (let i = args.length - 1; i >= 0; i -= 1) {
+    stack.push(args[i]);
+  }
+  while (stack.length > 0) {
+    const value = stack.pop();
     if (Array.isArray(value)) {
-      for (const item of value) visit(item);
+      for (let i = value.length - 1; i >= 0; i -= 1) {
+        stack.push(value[i]);
+      }
     } else {
       values.push(value);
     }
   }
-  for (const arg of args) visit(arg);
   return values;
 }
 
@@ -299,11 +321,23 @@ function flattenArray(value, depth) {
   }
   if (depth <= 0) return value.slice();
   const result = [];
-  for (const item of value) {
-    if (Array.isArray(item)) {
-      const flattened = flattenArray(item, depth - 1);
-      for (const entry of flattened) {
-        result.push(entry);
+  const frames = [{ array: value, index: 0, depth }];
+  while (frames.length > 0) {
+    const frame = frames[frames.length - 1];
+    if (frame.index >= frame.array.length) {
+      frames.pop();
+      continue;
+    }
+    const item = frame.array[frame.index];
+    frame.index += 1;
+    if (Array.isArray(item) && frame.depth > 0) {
+      const nextDepth = frame.depth - 1;
+      if (nextDepth <= 0) {
+        for (let i = 0; i < item.length; i += 1) {
+          result.push(item[i]);
+        }
+      } else {
+        frames.push({ array: item, index: 0, depth: nextDepth });
       }
     } else {
       result.push(item);
@@ -568,8 +602,20 @@ function callFunction(name, args) {
     case 'distinct': {
       if (!Array.isArray(args[0])) return [];
       const result = [];
+      const seen = new Set();
+      const objects = [];
       for (const item of args[0]) {
-        if (!result.some((existing) => deepEqual(existing, item))) {
+        if (item !== null && typeof item === 'object') {
+          if (!objects.some((existing) => deepEqual(existing, item))) {
+            objects.push(item);
+            result.push(item);
+          }
+        } else if (Number.isNaN(item)) {
+          result.push(item);
+        } else {
+          const key = item === undefined ? null : item;
+          if (seen.has(key)) continue;
+          seen.add(key);
           result.push(item);
         }
       }

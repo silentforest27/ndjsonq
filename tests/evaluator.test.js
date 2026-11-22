@@ -10,6 +10,29 @@ test('deepEqual compares object keys in any order', () => {
   assert.equal(deepEqual([1, 2], [1, 2]), true);
 });
 
+test('deepEqual handles null and undefined consistently', () => {
+  assert.equal(deepEqual(null, undefined), true);
+  assert.equal(deepEqual(undefined, null), true);
+  assert.equal(deepEqual(null, 0), false);
+});
+
+test('deepEqual handles deeply nested structures without stack overflow', () => {
+  function nest(depth, leaf = 1) {
+    let result = leaf;
+    for (let i = 0; i < depth; i += 1) {
+      result = [result];
+    }
+    return result;
+  }
+
+  const left = nest(5000);
+  const right = nest(5000);
+  const different = nest(5000, 2);
+
+  assert.equal(deepEqual(left, right), true);
+  assert.equal(deepEqual(left, different), false);
+});
+
 test('getPath resolves nested and array paths', () => {
   const record = { user: { scores: [10, 20] } };
   assert.equal(getPath(record, 'user.scores.1'), 20);

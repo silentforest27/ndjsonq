@@ -101,3 +101,24 @@ test('trailing commas are allowed', () => {
   assert.deepEqual(evalExpr('[1, 2, 3,]', {}), [1, 2, 3]);
   assert.equal(evalExpr('sum(1, 2, 3,)', {}), 6);
 });
+
+test('flatten handles deeply nested arrays', () => {
+  let value = 1;
+  for (let i = 0; i < 5000; i += 1) {
+    value = [value];
+  }
+  assert.deepEqual(evalExpr('flatten(value, 5000)', { value }), [1]);
+});
+
+test('sum handles deeply nested arrays', () => {
+  let value = 1;
+  for (let i = 0; i < 5000; i += 1) {
+    value = [value];
+  }
+  assert.equal(evalExpr('sum(value)', { value }), 1);
+});
+
+test('unique handles large primitive arrays', () => {
+  const values = Array.from({ length: 20000 }, (_, index) => index % 5000);
+  assert.equal(evalExpr('unique(values)', { values }).length, 5000);
+});
