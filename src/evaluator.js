@@ -297,11 +297,14 @@ function flattenArray(value, depth) {
   if (!Array.isArray(value)) {
     return value == null ? [] : [value];
   }
-  if (depth <= 0) return [...value];
+  if (depth <= 0) return value.slice();
   const result = [];
   for (const item of value) {
     if (Array.isArray(item)) {
-      result.push(...flattenArray(item, depth - 1));
+      const flattened = flattenArray(item, depth - 1);
+      for (const entry of flattened) {
+        result.push(entry);
+      }
     } else {
       result.push(item);
     }
@@ -371,18 +374,28 @@ function callFunction(name, args) {
     case 'min': {
       const values = collectValues(args);
       if (values.length === 0) return Math.min();
-      return Math.min(...values.map(toNumber));
+      let min = toNumber(values[0]);
+      for (let i = 1; i < values.length; i += 1) {
+        const number = toNumber(values[i]);
+        if (number < min) min = number;
+      }
+      return min;
     }
     case 'max': {
       const values = collectValues(args);
       if (values.length === 0) return Math.max();
-      return Math.max(...values.map(toNumber));
+      let max = toNumber(values[0]);
+      for (let i = 1; i < values.length; i += 1) {
+        const number = toNumber(values[i]);
+        if (number > max) max = number;
+      }
+      return max;
     }
     case 'keys':
       return args[0] && typeof args[0] === 'object' ? Object.keys(args[0]) : [];
     case 'values': {
       const value = args[0];
-      if (Array.isArray(value)) return [...value];
+      if (Array.isArray(value)) return value.slice();
       if (value && typeof value === 'object') return Object.values(value);
       return [];
     }
@@ -535,13 +548,13 @@ function callFunction(name, args) {
     }
     case 'reverse': {
       const value = args[0];
-      if (Array.isArray(value)) return [...value].reverse();
+      if (Array.isArray(value)) return value.slice().reverse();
       if (typeof value === 'string') return [...value].reverse().join('');
       return value;
     }
     case 'sort': {
       if (!Array.isArray(args[0])) return [];
-      const result = [...args[0]];
+      const result = args[0].slice();
       const order = args.length > 1 ? args[1] : 'asc';
       const descending =
         order === 'desc' || order === false || order === -1;
@@ -595,7 +608,9 @@ function callFunction(name, args) {
       const result = [];
       for (const arg of args) {
         if (Array.isArray(arg)) {
-          result.push(...arg);
+          for (const item of arg) {
+            result.push(item);
+          }
         } else {
           result.push(arg);
         }
