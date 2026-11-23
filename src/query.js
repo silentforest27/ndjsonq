@@ -116,6 +116,11 @@ function parseArgs(argv) {
       break;
     }
 
+    if (arg === '-') {
+      positionals.push(arg);
+      continue;
+    }
+
     if (arg === '-h' || arg === '--help') {
       options.help = true;
       continue;
