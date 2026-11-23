@@ -509,6 +509,49 @@ function callFunction(name, args) {
       }
       return result;
     }
+    case 'pick': {
+      const result = {};
+      const target = args[0];
+      if (target && typeof target === 'object' && !Array.isArray(target)) {
+        for (const key of collectValues(args.slice(1))) {
+          const property = String(key == null ? '' : key);
+          if (
+            property === '__proto__' ||
+            property === 'constructor' ||
+            property === 'prototype'
+          ) {
+            continue;
+          }
+          if (Object.prototype.hasOwnProperty.call(target, property)) {
+            result[property] = target[property];
+          }
+        }
+      }
+      return result;
+    }
+    case 'omit': {
+      const result = {};
+      const target = args[0];
+      if (target && typeof target === 'object' && !Array.isArray(target)) {
+        const omitted = new Set(
+          collectValues(args.slice(1)).map((key) =>
+            String(key == null ? '' : key)
+          )
+        );
+        for (const key of Object.keys(target)) {
+          if (
+            key === '__proto__' ||
+            key === 'constructor' ||
+            key === 'prototype' ||
+            omitted.has(key)
+          ) {
+            continue;
+          }
+          result[key] = target[key];
+        }
+      }
+      return result;
+    }
     case 'coalesce': {
       for (const value of args) {
         if (value !== null && value !== undefined) return value;

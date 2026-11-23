@@ -91,6 +91,9 @@ test('string, array, object, and utility helpers', () => {
   assert.equal(evalExpr('get(obj, "missing", 42)', { obj: { a: 1 } }), 42);
   assert.equal(evalExpr('has(obj, "a")', { obj: { a: 1 } }), true);
   assert.deepEqual(evalExpr('merge(a, b)', { a: { x: 1 }, b: { y: 2 } }), { x: 1, y: 2 });
+  assert.deepEqual(evalExpr('pick(obj, "a", "c")', { obj: { a: 1, b: 2, c: 3 } }), { a: 1, c: 3 });
+  assert.deepEqual(evalExpr('pick(obj, ["a", "c"])', { obj: { a: 1, b: 2, c: 3 } }), { a: 1, c: 3 });
+  assert.deepEqual(evalExpr('omit(obj, "b")', { obj: { a: 1, b: 2, c: 3 } }), { a: 1, c: 3 });
   assert.equal(evalExpr('clamp(n, 0, 10)', { n: 15 }), 10);
   assert.equal(evalExpr('sign(n)', { n: -5 }), -1);
   assert.equal(evalExpr('trunc(n)', { n: 3.9 }), 3);
