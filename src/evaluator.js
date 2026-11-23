@@ -411,7 +411,11 @@ function callFunction(name, args) {
       let min = toNumber(values[0]);
       for (let i = 1; i < values.length; i += 1) {
         const number = toNumber(values[i]);
-        if (number < min) min = number;
+        if (Number.isNaN(number)) {
+          min = NaN;
+        } else if (number < min) {
+          min = number;
+        }
       }
       return min;
     }
@@ -421,7 +425,11 @@ function callFunction(name, args) {
       let max = toNumber(values[0]);
       for (let i = 1; i < values.length; i += 1) {
         const number = toNumber(values[i]);
-        if (number > max) max = number;
+        if (Number.isNaN(number)) {
+          max = NaN;
+        } else if (number > max) {
+          max = number;
+        }
       }
       return max;
     }
@@ -610,8 +618,6 @@ function callFunction(name, args) {
             objects.push(item);
             result.push(item);
           }
-        } else if (Number.isNaN(item)) {
-          result.push(item);
         } else {
           const key = item === undefined ? null : item;
           if (seen.has(key)) continue;
