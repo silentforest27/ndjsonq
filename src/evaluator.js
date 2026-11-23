@@ -451,8 +451,14 @@ function callFunction(name, args) {
       const target = args[0];
       const key = args.length > 1 ? args[1] : undefined;
       if (Array.isArray(target)) {
-        const index = Math.trunc(toNumber(key));
-        if (index >= 0 && index < target.length) return target[index];
+        const property = String(key == null ? '' : key);
+        if (/^\d+$/.test(property)) {
+          const index = Number(property);
+          if (index >= 0 && index < target.length) return target[index];
+        } else if (Object.prototype.hasOwnProperty.call(target, property)) {
+          return target[property];
+        }
+        return args.length > 2 ? args[2] : undefined;
       } else if (target && typeof target === 'object') {
         const property = String(key == null ? '' : key);
         if (Object.prototype.hasOwnProperty.call(target, property)) {
@@ -465,8 +471,12 @@ function callFunction(name, args) {
       const target = args[0];
       const key = args.length > 1 ? args[1] : undefined;
       if (Array.isArray(target)) {
-        const index = Math.trunc(toNumber(key));
-        return index >= 0 && index < target.length;
+        const property = String(key == null ? '' : key);
+        if (/^\d+$/.test(property)) {
+          const index = Number(property);
+          return index >= 0 && index < target.length;
+        }
+        return Object.prototype.hasOwnProperty.call(target, property);
       }
       if (target && typeof target === 'object') {
         return Object.prototype.hasOwnProperty.call(
