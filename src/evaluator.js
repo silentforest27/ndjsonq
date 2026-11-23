@@ -209,12 +209,14 @@ function project(record, fields) {
   return output;
 }
 
-function deepEqual(a, b) {
+function deepEqual(a, b, sameValue = false) {
   if (a === b) return true;
+  if (sameValue && Number.isNaN(a) && Number.isNaN(b)) return true;
   const stack = [[a, b]];
   while (stack.length > 0) {
     const [left, right] = stack.pop();
     if (left === right) continue;
+    if (sameValue && Number.isNaN(left) && Number.isNaN(right)) continue;
     if (left == null || right == null) {
       if (left == right) continue;
       return false;
@@ -284,7 +286,7 @@ function compareGreater(a, b) {
 
 function contains(collection, value) {
   if (Array.isArray(collection)) {
-    return collection.some((item) => deepEqual(item, value));
+    return collection.some((item) => deepEqual(item, value, true));
   }
   if (typeof collection === 'string') {
     return collection.includes(String(value == null ? '' : value));
@@ -520,7 +522,7 @@ function callFunction(name, args) {
       const collection = args[0];
       const value = args[1];
       if (Array.isArray(collection)) {
-        return collection.findIndex((item) => deepEqual(item, value));
+        return collection.findIndex((item) => deepEqual(item, value, true));
       }
       if (typeof collection === 'string') {
         return collection.indexOf(String(value == null ? '' : value));
@@ -624,7 +626,7 @@ function callFunction(name, args) {
       const objects = [];
       for (const item of args[0]) {
         if (item !== null && typeof item === 'object') {
-          if (!objects.some((existing) => deepEqual(existing, item))) {
+          if (!objects.some((existing) => deepEqual(existing, item, true))) {
             objects.push(item);
             result.push(item);
           }
