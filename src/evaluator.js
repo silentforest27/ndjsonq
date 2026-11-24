@@ -558,6 +558,25 @@ function callFunction(name, args) {
       }
       return args.length ? args[args.length - 1] : null;
     }
+    case 'sortBy':
+    case 'orderBy': {
+      if (!Array.isArray(args[0])) return [];
+      const key = args.length > 1 ? args[1] : null;
+      const order = args.length > 2 ? args[2] : 'asc';
+      const descending =
+        order === 'desc' || order === false || order === -1;
+      const result = args[0].slice();
+      const valueFor = (item) => {
+        if (key == null) return item;
+        if (typeof key === 'string') return getPath(item, key);
+        return key;
+      };
+      result.sort((a, b) => {
+        const comparison = compareSort(valueFor(a), valueFor(b));
+        return descending ? -comparison : comparison;
+      });
+      return result;
+    }
     case 'includes':
     case 'contains':
       return contains(args[0], args[1]);

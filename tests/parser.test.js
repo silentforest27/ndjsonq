@@ -98,6 +98,18 @@ test('string, array, object, and utility helpers', () => {
   assert.equal(evalExpr('sign(n)', { n: -5 }), -1);
   assert.equal(evalExpr('trunc(n)', { n: 3.9 }), 3);
   assert.equal(evalExpr('coalesce(a, b)', { a: null, b: 7 }), 7);
+  assert.deepEqual(
+    evalExpr('sortBy(users, "age")', {
+      users: [{ id: 2, age: 30 }, { id: 1, age: 10 }]
+    }),
+    [{ id: 1, age: 10 }, { id: 2, age: 30 }]
+  );
+  assert.deepEqual(
+    evalExpr('sortBy(users, "age", "desc")', {
+      users: [{ id: 1, age: 10 }, { id: 2, age: 30 }]
+    }),
+    [{ id: 2, age: 30 }, { id: 1, age: 10 }]
+  );
 });
 
 test('trailing commas are allowed', () => {
