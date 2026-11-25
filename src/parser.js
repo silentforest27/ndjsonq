@@ -84,13 +84,33 @@ class Parser {
 
   comparison() {
     let node = this.additive();
-    const isComparison =
-      (this.current.type === 'op' &&
-        ['==', '!=', '<', '<=', '>', '>='].includes(this.current.value)) ||
-      (this.current.type === 'path' && this.current.value === 'in');
-    if (isComparison) {
-      const operator = this.current.value;
+    let operator = null;
+
+    if (
+      this.current.type === 'op' &&
+      ['==', '!=', '<', '<=', '>', '>='].includes(this.current.value)
+    ) {
+      operator = this.current.value;
       this.advance();
+    } else if (
+      this.current.type === 'path' &&
+      this.current.value === 'in'
+    ) {
+      operator = 'in';
+      this.advance();
+    } else if (
+      this.current.type === 'path' &&
+      this.current.value === 'not' &&
+      this.position + 1 < this.tokens.length &&
+      this.tokens[this.position + 1].type === 'path' &&
+      this.tokens[this.position + 1].value === 'in'
+    ) {
+      this.advance();
+      this.advance();
+      operator = 'not in';
+    }
+
+    if (operator !== null) {
       const right = this.additive();
       node = { type: 'cmp', op: operator, left: node, right };
     }

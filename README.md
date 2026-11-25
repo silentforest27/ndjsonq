@@ -62,6 +62,7 @@ Supported operators:
 
 ```text
 == != < <= > >= && || ! + - * / % ? :
+in not in
 ```
 
 Conditional expressions choose between two values:
@@ -70,12 +71,13 @@ Conditional expressions choose between two values:
 age >= 18 ? "adult" : "minor"
 ```
 
-Membership tests use `in`:
+Membership tests use `in` and `not in`:
 
 ```text
 "admin" in roles
 name in user
 text in body
+"admin" not in roles
 ```
 
 Literals include numbers, strings, booleans, `null`, and arrays:
@@ -92,13 +94,16 @@ null
 Available functions:
 
 ```text
-length, lower, upper, trim, trimStart, trimEnd, exists, type, number, string,
-abs, floor, ceil, round, pow, sqrt, sign, trunc, clamp, min, max,
-keys, values, entries, get, has, merge, omit, pick,
+length, size, lower, upper, trim, trimStart, trimEnd, trimLeft, trimRight,
+exists, type, number, string, abs, floor, ceil, round, pow, sqrt, sign,
+trunc, clamp, min, max, keys, values, entries, get, has, merge, omit, pick,
 contains, includes, indexOf, startsWith, endsWith, replace, replaceAll,
-repeat, padStart, padEnd, join, split, slice, reverse, sort, sortBy,
-unique, distinct, flatten, first, head, last, tail, concat, range,
-sum, avg, coalesce
+repeat, padStart, padEnd, join, split, slice, reverse, sort, sortBy, orderBy,
+unique, distinct, uniq, uniqBy, flatten, flattenDeep, first, head, last, tail,
+concat, range, sum, avg, mean, sumBy, avgBy, meanBy, minBy, maxBy, coalesce,
+groupBy, countBy, keyBy, chunk, zip, compact, difference, intersection, union,
+take, drop, takeRight, dropRight, initial, nth, pluck, filter, reject, find,
+findLast, some, every, isEmpty
 ```
 
 Aggregate helpers accept either an array or multiple arguments.
