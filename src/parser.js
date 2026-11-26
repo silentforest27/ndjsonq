@@ -64,10 +64,22 @@ class Parser {
 
   or() {
     let node = this.and();
-    while (this.current.type === 'op' && this.current.value === '||') {
+    while (
+      this.current.type === 'op' &&
+      (this.current.value === '||' || this.current.value === '??')
+    ) {
+      const operator = this.current.value;
       this.advance();
       const right = this.and();
-      node = { type: 'or', left: node, right };
+      if (operator === '??') {
+        node = {
+          type: 'call',
+          name: 'coalesce',
+          args: [node, right]
+        };
+      } else {
+        node = { type: 'or', left: node, right };
+      }
     }
     return node;
   }

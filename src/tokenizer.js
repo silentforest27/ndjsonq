@@ -126,6 +126,11 @@ function tokenize(input) {
     }
 
     const two = input.slice(i, i + 2);
+    if (two === '??') {
+      tokens.push({ type: 'op', value: '??' });
+      i += 2;
+      continue;
+    }
     if (['==', '!=', '<=', '>=', '&&', '||'].includes(two)) {
       tokens.push({ type: 'op', value: two });
       i += 2;

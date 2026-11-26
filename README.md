@@ -61,7 +61,7 @@ items[0].name
 Supported operators:
 
 ```text
-== != < <= > >= && || ! + - * / % ? :
+== != < <= > >= && || ?? ! + - * / % ? :
 in not in
 ```
 
@@ -69,6 +69,14 @@ Conditional expressions choose between two values:
 
 ```text
 age >= 18 ? "adult" : "minor"
+```
+
+Nullish coalescing chooses the right-hand value only when the left-hand value
+is `null` or `undefined`:
+
+```text
+value ?? 0
+name ?? "unknown"
 ```
 
 Membership tests use `in` and `not in`:

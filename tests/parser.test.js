@@ -53,6 +53,15 @@ test('ternary expressions', () => {
   assert.equal(evalExpr('false ? missing() : 42', {}), 42);
 });
 
+test('nullish coalescing', () => {
+  assert.equal(evalExpr('value ?? 7', { value: null }), 7);
+  assert.equal(evalExpr('value ?? 7', { value: undefined }), 7);
+  assert.equal(evalExpr('value ?? 7', { value: 0 }), 0);
+  assert.equal(evalExpr('value ?? 7', { value: false }), false);
+  assert.equal(evalExpr('value ?? 7', { value: '' }), '');
+  assert.equal(evalExpr('value ?? fallback', { value: null, fallback: 42 }), 42);
+});
+
 test('aggregate helpers accept arrays or arguments', () => {
   assert.equal(evalExpr('sum(values)', { values: [1, 2, 3] }), 6);
   assert.equal(evalExpr('sum(1, 2, 3)'), 6);
