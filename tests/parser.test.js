@@ -146,3 +146,11 @@ test('unique handles large primitive arrays', () => {
   const values = Array.from({ length: 20000 }, (_, index) => index % 5000);
   assert.equal(evalExpr('unique(values)', { values }).length, 5000);
 });
+
+test('optional chaining', () => {
+  assert.equal(evalExpr('user?.name', { user: { name: 'Ada' } }), 'Ada');
+  assert.equal(evalExpr('user?.name', {}), undefined);
+  assert.equal(evalExpr('user?.profile?.name', { user: {} }), undefined);
+  assert.equal(evalExpr('items?.[0]?.name', { items: [{ name: 'Ada' }] }), 'Ada');
+  assert.equal(evalExpr('items?.[0]?.name', {}), undefined);
+});

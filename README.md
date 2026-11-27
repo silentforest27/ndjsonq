@@ -1,7 +1,7 @@
 # ndjsonq
 
 `ndjsonq` is a dependency-free Node.js command-line tool for filtering,
-projecting, and formatting newline-delimited JSON (NDJSON) records. It streams
+projecting, and formatting newline-delimited JSON records. It streams
 input line by line, so it can handle large files without loading them entirely
 into memory.
 
@@ -61,8 +61,7 @@ items[0].name
 Supported operators:
 
 ```text
-== != < <= > >= && || ?? ! + - * / % ? :
-in not in
+== != < <= > >= && || ?? ! + - * / % ? : ?. in not in
 ```
 
 Conditional expressions choose between two values:
@@ -77,6 +76,15 @@ is `null` or `undefined`:
 ```text
 value ?? 0
 name ?? "unknown"
+```
+
+Optional chaining safely reads a nested property or index. It yields
+`undefined` when an intermediate value is `null` or `undefined`:
+
+```text
+user?.name
+items?.[0]?.name
+user?.profile?.name
 ```
 
 Membership tests use `in` and `not in`:

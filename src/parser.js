@@ -244,16 +244,16 @@ class Parser {
   }
 
   access(node) {
-    while (
-      this.current.type === 'sym' &&
-      (this.current.value === '[' || this.current.value === '.')
-    ) {
-      if (this.current.value === '[') {
+    while (true) {
+      if (this.current.type === 'sym' && this.current.value === '[') {
         this.advance();
         const index = this.expression();
         this.expect('sym', ']');
         node = { type: 'index', target: node, index };
-      } else {
+        continue;
+      }
+
+      if (this.current.type === 'sym' && this.current.value === '.') {
         this.advance();
         if (this.current.type !== 'path') {
           throw new Error(`Expected property name but found ${this.current.type}`);
@@ -261,7 +261,54 @@ class Parser {
         const property = this.current.value;
         this.advance();
         node = { type: 'member', target: node, property };
+        continue;
       }
+
+      if (
+        this.current.type === 'sym' &&
+        this.current.value === '?' &&
+        this.position + 1 < this.tokens.length &&
+        this.tokens[this.position + 1].type === 'sym' &&
+        this.tokens[this.position + 1].value === '.'
+      ) {
+        this.advance();
+        this.advance();
+
+        if (this.current.type === 'sym' && this.current.value === '[') {
+          this.advance();
+          const index = this.expression();
+          this.expect('sym', ']');
+          node = {
+            type: 'call',
+            name: 'get',
+            args: [node, index]
+          };
+          continue;
+        }
+
+        if (this.current.type !== 'path') {
+          throw new Error(`Expected property name but found ${this.current.type}`);
+        }
+
+        const property = this.current.value;
+        this.advance();
+        node = this.optionalGet(node, property);
+        continue;
+      }
+
+      break;
+    }
+
+    return node;
+  }
+
+  optionalGet(node, property) {
+    for (const segment of String(property).split('.')) {
+      node = {
+        type: 'call',
+        name: 'get',
+        args: [node, { type: 'literal', value: segment }]
+      };
     }
     return node;
   }
